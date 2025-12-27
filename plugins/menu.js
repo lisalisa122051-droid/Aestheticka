@@ -3,35 +3,35 @@ const config = require('../config.js');
 module.exports = async (sock, message) => {
     const { from, sender, command, sendListMessage, reply } = message;
 
-    // Command .menu - List Message utama
+    // Command .menu - Main List Message
     if (command === 'menu') {
         const listMessage = {
-            text: `*${config.name} BOT*\n\nHalo @${sender}, saya adalah WhatsApp Bot Multi-Device.\n\n*Silakan pilih menu di bawah:*`,
+            text: `🤖 *${config.name} BOT*\n\nHello @${sender}, I am a WhatsApp Multi-Device Bot.\n\n*Please select a menu below:*`,
             footer: `Version: ${config.botInfo.version}`,
-            title: "📱 MENU UTAMA",
-            buttonText: "BUKA MENU",
+            title: "📱 MAIN MENU",
+            buttonText: "OPEN MENU",
             sections: [
                 {
-                    title: "🎯 PILIHAN UTAMA",
+                    title: "🎯 MAIN OPTIONS",
                     rows: [
                         {
-                            title: "📋 SEMUA MENU",
-                            description: "Lihat semua menu yang tersedia",
+                            title: "📋 ALL MENUS",
+                            description: "View all available menus",
                             rowId: `${config.prefix}allmenu`
                         },
                         {
                             title: "🚀 PING & STATUS",
-                            description: "Cek kecepatan & status bot",
+                            description: "Check bot speed & status",
                             rowId: `${config.prefix}ping`
                         },
                         {
-                            title: "👑 MENU OWNER",
-                            description: "Menu khusus pemilik bot",
+                            title: "👑 OWNER MENU",
+                            description: "Bot owner exclusive menu",
                             rowId: `${config.prefix}owner`
                         },
                         {
-                            title: "👥 MENU GRUP",
-                            description: "Pengaturan grup & admin",
+                            title: "👥 GROUP MENU",
+                            description: "Group management tools",
                             rowId: `${config.prefix}group`
                         }
                     ]
@@ -43,25 +43,25 @@ module.exports = async (sock, message) => {
         return true;
     }
 
-    // Command .allmenu - Semua menu dalam List Message
+    // Command .allmenu - All menus in List Message
     if (command === 'allmenu' || command === 'help') {
         const sections = [
             {
                 title: "📊 CORE & INFO",
                 rows: [
-                    { title: "Ping", description: "Cek respon bot", rowId: `${config.prefix}ping` },
-                    { title: "Speed", description: "Test kecepatan", rowId: `${config.prefix}speed` },
-                    { title: "Runtime", description: "Waktu aktif bot", rowId: `${config.prefix}runtime` },
-                    { title: "Bot Info", description: "Informasi bot", rowId: `${config.prefix}infobot` },
+                    { title: "Ping", description: "Check bot response", rowId: `${config.prefix}ping` },
+                    { title: "Speed", description: "Test bot speed", rowId: `${config.prefix}speed` },
+                    { title: "Runtime", description: "Bot uptime", rowId: `${config.prefix}runtime` },
+                    { title: "Bot Info", description: "Bot information", rowId: `${config.prefix}infobot` },
                 ],
             },
             {
                 title: "🎮 FUN & GAMES",
                 rows: [
-                    { title: "Joke", description: "Cerita lucu", rowId: `${config.prefix}joke` },
-                    { title: "Truth", description: "Pertanyaan jujur", rowId: `${config.prefix}truth` },
-                    { title: "Dare", description: "Tantangan seru", rowId: `${config.prefix}dare` },
-                    { title: "Rate", description: "Rating sesuatu", rowId: `${config.prefix}rate` },
+                    { title: "Joke", description: "Get random jokes", rowId: `${config.prefix}joke` },
+                    { title: "Truth", description: "Truth questions", rowId: `${config.prefix}truth` },
+                    { title: "Dare", description: "Dare challenges", rowId: `${config.prefix}dare` },
+                    { title: "Rate", description: "Rate something", rowId: `${config.prefix}rate` },
                 ],
             },
             {
@@ -76,28 +76,28 @@ module.exports = async (sock, message) => {
             {
                 title: "🛠️ TOOLS",
                 rows: [
-                    { title: "Sticker", description: "Buat stiker", rowId: `${config.prefix}sticker` },
-                    { title: "To Image", description: "Stiker ke gambar", rowId: `${config.prefix}toimg` },
-                    { title: "To Audio", description: "Ekstrak audio", rowId: `${config.prefix}toaudio` },
-                    { title: "Shortlink", description: "Pendekkan URL", rowId: `${config.prefix}shortlink` },
+                    { title: "Sticker", description: "Create sticker", rowId: `${config.prefix}sticker` },
+                    { title: "To Image", description: "Sticker to image", rowId: `${config.prefix}toimg` },
+                    { title: "To Audio", description: "Extract audio", rowId: `${config.prefix}toaudio` },
+                    { title: "Shortlink", description: "Shorten URL", rowId: `${config.prefix}shortlink` },
                 ],
             },
             {
-                title: "👥 GROUP MENU",
+                title: "👥 GROUP",
                 rows: [
-                    { title: "Welcome On/Off", description: "Aktifkan welcome", rowId: `${config.prefix}welcome` },
-                    { title: "Set Name", description: "Ubah nama grup", rowId: `${config.prefix}setname` },
-                    { title: "Set Desc", description: "Ubah deskripsi", rowId: `${config.prefix}setdesc` },
-                    { title: "Add Member", description: "Tambah anggota", rowId: `${config.prefix}add` },
+                    { title: "Welcome On/Off", description: "Welcome message", rowId: `${config.prefix}welcome` },
+                    { title: "Set Name", description: "Change group name", rowId: `${config.prefix}setname` },
+                    { title: "Set Desc", description: "Change description", rowId: `${config.prefix}setdesc` },
+                    { title: "Add Member", description: "Add members", rowId: `${config.prefix}add` },
                 ],
             }
         ];
 
         const listMessage = {
-            text: `*📚 ALL MENU LIST*\n\nTotal: ${sections.reduce((acc, sec) => acc + sec.rows.length, 0)} commands\n\nPilih kategori:`,
+            text: `*📚 ALL MENU LIST*\n\nTotal: ${sections.reduce((acc, sec) => acc + sec.rows.length, 0)} commands\n\nSelect a category:`,
             footer: `Prefix: ${config.prefix}`,
-            title: "📋 KATEGORI MENU",
-            buttonText: "PILIH KATEGORI",
+            title: "📋 MENU CATEGORIES",
+            buttonText: "SELECT CATEGORY",
             sections: sections,
         };
 
