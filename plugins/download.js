@@ -1,10 +1,35 @@
 const axios = require('axios');
-const { getBuffer } = require('../lib/function.js');
+const path = require('path');
+const { getBuffer } = require(path.join(__dirname, '..', 'lib', 'function.js'));
+const config = require('../config.js');
 
 module.exports = async (sock, message) => {
   const { from, sender, command, args, reply } = message;
 
-  // Play (button selector)
+  // Command .download untuk List Message
+  if (command === 'download') {
+    const listMessage = {
+      text: "⬇️ *DOWNLOAD MENU*\n\nPilih platform download:",
+      title: "DOWNLOAD",
+      buttonText: "Pilih Platform",
+      sections: [
+        {
+          title: "VIDEO/AUDIO",
+          rows: [
+            { title: "YouTube Video", description: "Download video YouTube", rowId: `${config.prefix}ytvideo` },
+            { title: "TikTok Video", description: "Download video TikTok", rowId: `${config.prefix}tiktok` },
+            { title: "Instagram", description: "Download IG video/foto", rowId: `${config.prefix}instagram` },
+            { title: "Play", description: "Pilih audio/video", rowId: `${config.prefix}play` },
+          ]
+        }
+      ]
+    };
+
+    await sock.sendMessage(from, listMessage);
+    return true;
+  }
+
+  // Play (button selector) - tetap dipertahankan
   if (command === 'play') {
     const buttons = [
       { buttonId: `${command} audio`, buttonText: { displayText: '🎵 Audio' }, type: 1 },
