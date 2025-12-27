@@ -1,6 +1,7 @@
-const { isJidGroup } = require('@adiwajshing/baileys');
-const { extractPhoneFromJid, normalizePhoneNumber } = require('../lib/jidUtils.js');
+const { isJidGroup } = require('@whiskeysockets/baileys');
+const { extractPhoneFromJid, normalizePhoneNumber, isAdminInGroup } = require('../lib/jidUtils.js');
 const database = require('../lib/database.js');
+const config = require('../config.js');
 
 module.exports = async (sock, message) => {
     const { from, sender, senderJid, command, args, reply, isGroup, isOwner, groupMetadata, sendListMessage } = message;
@@ -8,7 +9,14 @@ module.exports = async (sock, message) => {
     // Command group utama (List Message)
     if (command === 'group') {
         if (!isGroup) {
-            await reply('Command ini hanya bisa digunakan di dalam grup!');
+            await reply('This command can only be used in groups!');
+            return true;
+        }
+
+        // Check if user is admin
+        const isAdmin = isAdminInGroup(senderJid, groupMetadata);
+        if (!isAdmin && !isOwner) {
+            await reply('Only group admins can use group commands!');
             return true;
         }
 
@@ -18,23 +26,23 @@ module.exports = async (sock, message) => {
                 rows: [
                     { 
                         title: "Welcome On/Off", 
-                        description: "Aktifkan/Nonaktifkan welcome message", 
-                        rowId: `${command} welcome` 
+                        description: "Enable/disable welcome message", 
+                        rowId: `${config.prefix}welcome` 
                     },
                     { 
                         title: "Antilink On/Off", 
-                        description: "Aktifkan/Nonaktifkan anti link", 
-                        rowId: `${command} antilink` 
+                        description: "Enable/disable anti-link", 
+                        rowId: `${config.prefix}antilink` 
                     },
                     { 
                         title: "Set Group Name", 
-                        description: "Ubah nama grup", 
-                        rowId: `${command} setname` 
+                        description: "Change group name", 
+                        rowId: `${config.prefix}setname` 
                     },
                     { 
                         title: "Set Description", 
-                        description: "Ubah deskripsi grup", 
-                        rowId: `${command} setdesc` 
+                        description: "Change group description", 
+                        rowId: `${config.prefix}setdesc` 
                     }
                 ]
             },
@@ -43,23 +51,23 @@ module.exports = async (sock, message) => {
                 rows: [
                     { 
                         title: "Add Member", 
-                        description: "Tambah anggota ke grup", 
-                        rowId: `${command} add` 
+                        description: "Add members to group", 
+                        rowId: `${config.prefix}add` 
                     },
                     { 
                         title: "Kick Member", 
-                        description: "Keluarkan anggota dari grup", 
-                        rowId: `${command} kick` 
+                        description: "Remove members from group", 
+                        rowId: `${config.prefix}kick` 
                     },
                     { 
                         title: "Promote to Admin", 
-                        description: "Jadikan anggota sebagai admin", 
-                        rowId: `${command} promote` 
+                        description: "Make member admin", 
+                        rowId: `${config.prefix}promote` 
                     },
                     { 
                         title: "Demote Admin", 
-                        description: "Turunkan admin menjadi anggota", 
-                        rowId: `${command} demote` 
+                        description: "Remove admin status", 
+                        rowId: `${config.prefix}demote` 
                     }
                 ]
             },
@@ -68,28 +76,28 @@ module.exports = async (sock, message) => {
                 rows: [
                     { 
                         title: "Open Group", 
-                        description: "Buka grup (semua bisa chat)", 
-                        rowId: `${command} open` 
+                        description: "Open group (all can chat)", 
+                        rowId: `${config.prefix}open` 
                     },
                     { 
                         title: "Close Group", 
-                        description: "Tutup grup (hanya admin)", 
-                        rowId: `${command} close` 
+                        description: "Close group (admins only)", 
+                        rowId: `${config.prefix}close` 
                     },
                     { 
                         title: "Group Info", 
-                        description: "Lihat informasi grup", 
-                        rowId: `${command} info` 
+                        description: "View group information", 
+                        rowId: `${config.prefix}groupinfo` 
                     }
                 ]
             }
         ];
 
         const listMessage = {
-            text: `*👥 GROUP MENU*\n\nGrup: ${groupMetadata?.subject || 'Unknown'}\n\nPilih opsi pengaturan grup:`,
-            footer: `Admin: ${groupMetadata?.participants?.filter(p => p.admin).length || 0} orang`,
-            title: "GROUP MANAGEMENT",
-            buttonText: "PILIH MENU",
+            text: `*👥 GROUP MANAGEMENT*\n\nGroup: ${groupMetadata?.subject || 'Unknown'}\n\nSelect a group management option:`,
+            footer: `Admins: ${groupMetadata?.participants?.filter(p => p.admin).length || 0}`,
+            title: "GROUP MENU",
+            buttonText: "SELECT OPTION",
             sections: sections
         };
 
@@ -100,16 +108,13 @@ module.exports = async (sock, message) => {
     // Hanya proses di grup
     if (!isGroup) return false;
 
-    // Validasi admin
-    const participants = groupMetadata?.participants || [];
-    const isAdmin = participants.find(p => p.id === senderJid)?.admin || false;
+    // Validasi admin untuk commands berikut
+    const isAdmin = isAdminInGroup(senderJid, groupMetadata);
+    const adminCommands = ['welcome', 'setname', 'setdesc', 'open', 'close', 'kick', 'add', 'promote', 'demote', 'antilink'];
     
-    if (!isAdmin && !isOwner) {
-        // Jika bukan admin, tampilkan pesan error
-        if (['welcome', 'setname', 'setdesc', 'open', 'close', 'kick', 'add', 'promote', 'demote', 'antilink'].includes(command)) {
-            await reply('Hanya admin grup yang bisa menggunakan command ini!');
-            return true;
-        }
+    if (adminCommands.includes(command) && !isAdmin && !isOwner) {
+        await reply('Only group admins can use this command!');
+        return true;
     }
 
     // Welcome on/off
@@ -117,13 +122,13 @@ module.exports = async (sock, message) => {
         const status = args[0]?.toLowerCase();
         if (status === 'on') {
             database.updateGroupData(from, { welcome: true });
-            await reply('✅ Welcome message diaktifkan!');
+            await reply('✅ Welcome message enabled!');
         } else if (status === 'off') {
             database.updateGroupData(from, { welcome: false });
-            await reply('❌ Welcome message dinonaktifkan!');
+            await reply('❌ Welcome message disabled!');
         } else {
             const current = database.getGroupData(from).welcome;
-            await reply(`Status welcome: ${current ? '✅ AKTIF' : '❌ NONAKTIF'}\n\nGunakan: .welcome on/off`);
+            await reply(`Welcome status: ${current ? '✅ ENABLED' : '❌ DISABLED'}\n\nUsage: .welcome on/off`);
         }
         return true;
     }
@@ -133,13 +138,13 @@ module.exports = async (sock, message) => {
         const status = args[0]?.toLowerCase();
         if (status === 'on') {
             database.updateGroupData(from, { antilink: true });
-            await reply('✅ Antilink diaktifkan! Link akan dihapus otomatis.');
+            await reply('✅ Antilink enabled! Links will be deleted automatically.');
         } else if (status === 'off') {
             database.updateGroupData(from, { antilink: false });
-            await reply('❌ Antilink dinonaktifkan!');
+            await reply('❌ Antilink disabled!');
         } else {
             const current = database.getGroupData(from).antilink;
-            await reply(`Status antilink: ${current ? '✅ AKTIF' : '❌ NONAKTIF'}\n\nGunakan: .antilink on/off`);
+            await reply(`Antilink status: ${current ? '✅ ENABLED' : '❌ DISABLED'}\n\nUsage: .antilink on/off`);
         }
         return true;
     }
@@ -148,14 +153,14 @@ module.exports = async (sock, message) => {
     if (command === 'setname') {
         const name = args.join(' ');
         if (!name) {
-            await reply('Contoh: .setname Nama Grup Baru');
+            await reply('Usage: .setname <new group name>');
             return true;
         }
         try {
             await sock.groupUpdateSubject(from, name);
-            await reply(`✅ Nama grup berhasil diubah menjadi: ${name}`);
+            await reply(`✅ Group name changed to: ${name}`);
         } catch (error) {
-            await reply(`❌ Gagal mengubah nama grup: ${error.message}`);
+            await reply(`❌ Failed to change group name: ${error.message}`);
         }
         return true;
     }
@@ -164,14 +169,14 @@ module.exports = async (sock, message) => {
     if (command === 'setdesc') {
         const desc = args.join(' ');
         if (!desc) {
-            await reply('Contoh: .setdesc Deskripsi grup baru');
+            await reply('Usage: .setdesc <new group description>');
             return true;
         }
         try {
             await sock.groupUpdateDescription(from, desc);
-            await reply('✅ Deskripsi grup berhasil diubah!');
+            await reply('✅ Group description updated!');
         } catch (error) {
-            await reply(`❌ Gagal mengubah deskripsi: ${error.message}`);
+            await reply(`❌ Failed to update description: ${error.message}`);
         }
         return true;
     }
@@ -180,9 +185,9 @@ module.exports = async (sock, message) => {
     if (command === 'open') {
         try {
             await sock.groupSettingUpdate(from, 'not_announcement');
-            await reply('✅ Grup dibuka! Semua anggota bisa mengirim pesan.');
+            await reply('✅ Group opened! All members can send messages.');
         } catch (error) {
-            await reply(`❌ Gagal membuka grup: ${error.message}`);
+            await reply(`❌ Failed to open group: ${error.message}`);
         }
         return true;
     }
@@ -191,9 +196,9 @@ module.exports = async (sock, message) => {
     if (command === 'close') {
         try {
             await sock.groupSettingUpdate(from, 'announcement');
-            await reply('✅ Grup ditutup! Hanya admin yang bisa mengirim pesan.');
+            await reply('✅ Group closed! Only admins can send messages.');
         } catch (error) {
-            await reply(`❌ Gagal menutup grup: ${error.message}`);
+            await reply(`❌ Failed to close group: ${error.message}`);
         }
         return true;
     }
@@ -202,15 +207,15 @@ module.exports = async (sock, message) => {
     if (command === 'kick') {
         const mentioned = message.mentionedJid || [];
         if (mentioned.length === 0) {
-            await reply('Tag atau sebutkan anggota yang akan dikeluarkan!');
+            await reply('Mention or tag members to kick!');
             return true;
         }
         
         try {
             await sock.groupParticipantsUpdate(from, mentioned, 'remove');
-            await reply(`✅ Berhasil mengeluarkan ${mentioned.length} anggota.`);
+            await reply(`✅ Successfully kicked ${mentioned.length} member(s).`);
         } catch (error) {
-            await reply(`❌ Gagal mengeluarkan anggota: ${error.message}`);
+            await reply(`❌ Failed to kick members: ${error.message}`);
         }
         return true;
     }
@@ -219,7 +224,7 @@ module.exports = async (sock, message) => {
     if (command === 'add') {
         const numbers = args.map(arg => arg.replace(/[^0-9]/g, ''));
         if (numbers.length === 0) {
-            await reply('Contoh: .add 6281234567890 6289876543210');
+            await reply('Usage: .add <phone number> <phone number> ...');
             return true;
         }
         
@@ -231,9 +236,9 @@ module.exports = async (sock, message) => {
         
         try {
             await sock.groupParticipantsUpdate(from, jids, 'add');
-            await reply(`✅ Mengundang ${jids.length} anggota ke grup.`);
+            await reply(`✅ Invited ${jids.length} member(s) to the group.`);
         } catch (error) {
-            await reply(`❌ Gagal menambahkan anggota: ${error.message}`);
+            await reply(`❌ Failed to add members: ${error.message}`);
         }
         return true;
     }
@@ -242,15 +247,15 @@ module.exports = async (sock, message) => {
     if (command === 'promote') {
         const mentioned = message.mentionedJid || [];
         if (mentioned.length === 0) {
-            await reply('Tag anggota yang akan dijadikan admin!');
+            await reply('Mention members to promote to admin!');
             return true;
         }
         
         try {
             await sock.groupParticipantsUpdate(from, mentioned, 'promote');
-            await reply(`✅ Berhasil menjadikan ${mentioned.length} anggota sebagai admin.`);
+            await reply(`✅ Promoted ${mentioned.length} member(s) to admin.`);
         } catch (error) {
-            await reply(`❌ Gagal promote anggota: ${error.message}`);
+            await reply(`❌ Failed to promote members: ${error.message}`);
         }
         return true;
     }
@@ -259,16 +264,39 @@ module.exports = async (sock, message) => {
     if (command === 'demote') {
         const mentioned = message.mentionedJid || [];
         if (mentioned.length === 0) {
-            await reply('Tag admin yang akan diturunkan!');
+            await reply('Mention admins to demote!');
             return true;
         }
         
         try {
             await sock.groupParticipantsUpdate(from, mentioned, 'demote');
-            await reply(`✅ Berhasil menurunkan ${mentioned.length} admin.`);
+            await reply(`✅ Demoted ${mentioned.length} admin(s).`);
         } catch (error) {
-            await reply(`❌ Gagal demote admin: ${error.message}`);
+            await reply(`❌ Failed to demote admins: ${error.message}`);
         }
+        return true;
+    }
+
+    // Group info
+    if (command === 'groupinfo') {
+        if (!groupMetadata) {
+            await reply('Failed to get group information.');
+            return true;
+        }
+        
+        const admins = groupMetadata.participants.filter(p => p.admin).length;
+        const members = groupMetadata.participants.length;
+        const createdAt = new Date(groupMetadata.creation * 1000).toLocaleDateString();
+        
+        const info = `*📊 GROUP INFORMATION*\n\n` +
+                     `*Name:* ${groupMetadata.subject}\n` +
+                     `*Description:* ${groupMetadata.desc || 'No description'}\n` +
+                     `*Members:* ${members}\n` +
+                     `*Admins:* ${admins}\n` +
+                     `*Created:* ${createdAt}\n` +
+                     `*Group ID:* ${groupMetadata.id}`;
+        
+        await reply(info);
         return true;
     }
 
