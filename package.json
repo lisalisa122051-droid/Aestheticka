@@ -1,10 +1,11 @@
 {
   "name": "bot-wa-md",
-  "version": "3.0.0",
+  "version": "6.0.0",
   "description": "WhatsApp Bot Multi Device",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,8 +16,7 @@
   "author": "Expert Developer",
   "license": "MIT",
   "dependencies": {
-    "@adiwajshing/baileys": "^6.5.0",
-    "@adiwajshing/keyed-db": "^0.2.4",
+    "@whiskeysockets/baileys": "npm:@daffadeveloper/baileys@latest",
     "axios": "^1.7.2",
     "moment-timezone": "^0.5.45",
     "qrcode-terminal": "^0.12.0",
@@ -28,7 +28,7 @@
     "fs-extra": "^11.2.0",
     "pino": "^9.3.1",
     "libphonenumber-js": "^1.10.58",
-    "got": "^12.6.0"
+    "@hapi/boom": "^10.0.1"
   },
   "engines": {
     "node": ">=18.x"
