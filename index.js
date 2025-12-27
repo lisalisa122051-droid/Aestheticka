@@ -20,17 +20,19 @@ const { serializeMessage } = require('./lib/serialize.js');
 
 // Session folder
 const sessionFolder = path.join(__dirname, 'session');
-if (!fs.existsSync(sessionFolder)) fs.mkdirSync(sessionFolder, { recursive: true });
+if (!fs.existsSync(sessionFolder)) {
+    fs.mkdirSync(sessionFolder, { recursive: true });
+}
 
 async function connectToWhatsApp() {
     try {
-        console.log('🚀 Starting WhatsApp Bot with @daffadeveloper/baileys...');
+        console.log('🚀 Starting WhatsApp Bot with @whiskeysockets/baileys v6.5.0...');
         
         const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
         const { version } = await fetchLatestBaileysVersion();
         
-        console.log('📦 Baileys Version:', version);
-        console.log('🔗 Session folder:', sessionFolder);
+        console.log('📦 Using Baileys Version:', version);
+        console.log('🔗 Session location:', sessionFolder);
 
         const sock = makeWASocket({
             version,
@@ -47,7 +49,7 @@ async function connectToWhatsApp() {
             getMessage: async (key) => {
                 return null;
             },
-            // Optimasi untuk performa
+            // Performance optimization
             retryRequestDelayMs: 1000,
             maxMsgRetryCount: 3,
             connectTimeoutMs: 60000,
@@ -55,7 +57,7 @@ async function connectToWhatsApp() {
             keepAliveIntervalMs: 30000,
         });
 
-        // Simpan kredensial ketika update
+        // Save credentials when updated
         sock.ev.on('creds.update', saveCreds);
 
         // Handle connection updates
@@ -63,7 +65,7 @@ async function connectToWhatsApp() {
             const { connection, lastDisconnect, qr } = update;
             
             if (qr) {
-                console.log('📱 Scan QR Code ini dengan WhatsApp Mobile!');
+                console.log('📱 Scan this QR code with WhatsApp Mobile!');
             }
             
             if (connection === 'close') {
@@ -85,6 +87,7 @@ async function connectToWhatsApp() {
                 if (sock.user?.id) {
                     const phoneNumber = sock.user.id.split(':')[0];
                     console.log('📞 Bot phone number:', phoneNumber);
+                    config.owner = phoneNumber;
                 }
             }
         });
@@ -93,7 +96,7 @@ async function connectToWhatsApp() {
         sock.ev.on('messages.upsert', async (m) => {
             const msg = m.messages[0];
             
-            // Skip jika: tidak ada message, status broadcast, atau dari bot sendiri
+            // Skip if: no message, status broadcast, or from bot itself
             if (!msg.message || 
                 msg.key.remoteJid === 'status@broadcast' || 
                 msg.key.fromMe ||
@@ -124,24 +127,12 @@ async function connectToWhatsApp() {
                     for (const participant of participants) {
                         const user = participant.split('@')[0];
                         await sock.sendMessage(id, { 
-                            text: `🎉 Selamat datang @${user} di grup!\n\nJangan lupa perkenalkan diri ya! 😊` 
+                            text: `🎉 Welcome @${user} to the group!\n\nPlease introduce yourself! 😊` 
                         });
                     }
                 }
             } catch (error) {
                 console.error('Error in group update handler:', error);
-            }
-        });
-
-        // Handle message history sync (optional)
-        sock.ev.on('messaging-history.set', async (data) => {
-            console.log('🔄 Syncing message history...');
-        });
-
-        // Handle connection errors
-        sock.ev.on('connection.update', (update) => {
-            if (update.connection === 'connecting') {
-                console.log('🔄 Connecting to WhatsApp...');
             }
         });
 
