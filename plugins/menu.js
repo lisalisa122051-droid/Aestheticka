@@ -1,14 +1,13 @@
 const config = require('../config.js');
-const { generateWAMessageFromContent } = require('@adiwajshing/baileys');
 
 module.exports = async (sock, message) => {
-    const { from, sender, body, command, reply, sendListMessage } = message;
+    const { from, sender, command, sendListMessage, reply } = message;
 
+    // Command .menu - List Message utama
     if (command === 'menu') {
-        // Buat List Message yang kompatibel dengan Baileys official
         const listMessage = {
-            text: `*${config.name} BOT*\n\nHalo @${sender}, selamat datang di bot WhatsApp multi-device!\n\n*Silakan pilih menu di bawah:*`,
-            footer: `Versi: ${config.botInfo.version}`,
+            text: `*${config.name} BOT*\n\nHalo @${sender}, saya adalah WhatsApp Bot Multi-Device.\n\n*Silakan pilih menu di bawah:*`,
+            footer: `Version: ${config.botInfo.version}`,
             title: "📱 MENU UTAMA",
             buttonText: "BUKA MENU",
             sections: [
@@ -37,14 +36,14 @@ module.exports = async (sock, message) => {
                         }
                     ]
                 }
-            ],
-            mentions: [sender + '@s.whatsapp.net']
+            ]
         };
 
         await sendListMessage(listMessage);
         return true;
     }
 
+    // Command .allmenu - Semua menu dalam List Message
     if (command === 'allmenu' || command === 'help') {
         const sections = [
             {
@@ -90,23 +89,13 @@ module.exports = async (sock, message) => {
                     { title: "Set Name", description: "Ubah nama grup", rowId: `${config.prefix}setname` },
                     { title: "Set Desc", description: "Ubah deskripsi", rowId: `${config.prefix}setdesc` },
                     { title: "Add Member", description: "Tambah anggota", rowId: `${config.prefix}add` },
-                    { title: "Kick", description: "Keluarkan anggota", rowId: `${config.prefix}kick` },
-                ],
-            },
-            {
-                title: "🛡️ ADMIN TOOLS",
-                rows: [
-                    { title: "Promote", description: "Jadikan admin", rowId: `${config.prefix}promote` },
-                    { title: "Demote", description: "Turunkan admin", rowId: `${config.prefix}demote` },
-                    { title: "Antilink On/Off", description: "Anti link grup", rowId: `${config.prefix}antilink` },
-                    { title: "Open/Close", description: "Buka/tutup grup", rowId: `${config.prefix}open` },
                 ],
             }
         ];
 
         const listMessage = {
             text: `*📚 ALL MENU LIST*\n\nTotal: ${sections.reduce((acc, sec) => acc + sec.rows.length, 0)} commands\n\nPilih kategori:`,
-            footer: `Owner: @${config.owner}`,
+            footer: `Prefix: ${config.prefix}`,
             title: "📋 KATEGORI MENU",
             buttonText: "PILIH KATEGORI",
             sections: sections,
