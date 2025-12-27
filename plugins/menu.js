@@ -4,62 +4,38 @@ module.exports = async (sock, message) => {
   const { from, sender, body, command, reply } = message;
 
   if (command === 'menu') {
-    // Buat List Message dengan sections
-    const sections = [
-      {
-        title: "📱 MAIN MENU",
-        rows: [
-          {
-            title: "📋 ALL MENU",
-            description: "Lihat semua menu yang tersedia",
-            rowId: `${config.prefix}allmenu`
-          },
-          {
-            title: "🚀 PING",
-            description: "Cek kecepatan respon bot",
-            rowId: `${config.prefix}ping`
-          },
-          {
-            title: "👑 OWNER",
-            description: "Menu khusus pemilik bot",
-            rowId: `${config.prefix}owner`
-          },
-          {
-            title: "👥 GROUP",
-            description: "Pengaturan grup",
-            rowId: `${config.prefix}group`
-          },
-          {
-            title: "🎉 FUN",
-            description: "Fitur hiburan & games",
-            rowId: `${config.prefix}fun`
-          },
-          {
-            title: "⬇️ DOWNLOAD",
-            description: "Download video/audio",
-            rowId: `${config.prefix}download`
-          },
-          {
-            title: "🛠️ TOOLS",
-            description: "Alat & utilitas",
-            rowId: `${config.prefix}tools`
-          },
-          {
-            title: "⚙️ SETTINGS",
-            description: "Pengaturan bot",
-            rowId: `${config.prefix}settings`
-          }
-        ]
-      }
-    ];
-
-    // Kirim List Message
     const listMessage = {
       text: `*${config.name} BOT*\n\nHalo @${sender}, selamat datang di bot WhatsApp multi-device!\n\n*Silakan pilih menu di bawah:*`,
       footer: `Versi: ${config.botInfo.version}`,
       title: "MENU UTAMA",
       buttonText: "Buka Menu",
-      sections: sections,
+      sections: [
+        {
+          title: "📱 PILIHAN MENU",
+          rows: [
+            {
+              title: "📋 ALL MENU",
+              description: "Lihat semua menu yang tersedia",
+              rowId: `${config.prefix}allmenu`
+            },
+            {
+              title: "🚀 PING",
+              description: "Cek kecepatan respon bot",
+              rowId: `${config.prefix}ping`
+            },
+            {
+              title: "👑 OWNER",
+              description: "Menu khusus pemilik bot",
+              rowId: `${config.prefix}owner`
+            },
+            {
+              title: "👥 GROUP",
+              description: "Pengaturan grup",
+              rowId: `${config.prefix}group`
+            }
+          ]
+        }
+      ],
       mentions: [sender]
     };
 
@@ -68,7 +44,6 @@ module.exports = async (sock, message) => {
   }
 
   if (command === 'allmenu' || command === 'help') {
-    // Buat List Message dengan multiple sections
     const sections = [
       {
         title: "📱 CORE",
@@ -112,7 +87,8 @@ module.exports = async (sock, message) => {
           { title: "Welcome", description: "Aktifkan welcome", rowId: `${config.prefix}welcome on` },
           { title: "Set Name", description: "Ubah nama grup", rowId: `${config.prefix}setname` },
           { title: "Set Desc", description: "Ubah deskripsi", rowId: `${config.prefix}setdesc` },
-          { title: "Add Member", description: "Tambah anggota", rowId: `${config.prefix}add` },
+          { title: "Add", description: "Tambah anggota", rowId: `${config.prefix}add` },
+          { title: "Kick", description: "Keluarkan anggota", rowId: `${config.prefix}kick` },
         ],
       },
       {
@@ -120,7 +96,6 @@ module.exports = async (sock, message) => {
         rows: [
           { title: "Promote", description: "Jadikan admin", rowId: `${config.prefix}promote` },
           { title: "Demote", description: "Turunkan admin", rowId: `${config.prefix}demote` },
-          { title: "Kick", description: "Keluarkan anggota", rowId: `${config.prefix}kick` },
           { title: "Antilink", description: "Anti link grup", rowId: `${config.prefix}antilink on` },
         ],
       }
@@ -132,29 +107,6 @@ module.exports = async (sock, message) => {
       title: "KATEGORI MENU",
       buttonText: "Pilih Kategori",
       sections: sections,
-    };
-
-    await sock.sendMessage(from, listMessage);
-    return true;
-  }
-
-  // Command untuk menampilkan contoh List Message minimalis (seperti yang diminta)
-  if (command === 'menusimple') {
-    const listMessage = {
-      text: `Kamu bisa klik menu dibawah ini untuk melihat menu secara lengkap...`,
-      title: "MENU UTAMA",
-      buttonText: "Buka Menu",
-      sections: [
-        {
-          title: "PILIH MENU",
-          rows: [
-            { title: "All Menu", rowId: `${config.prefix}allmenu` },
-            { title: "Ping", rowId: `${config.prefix}ping` },
-            { title: "Owner", rowId: `${config.prefix}owner` },
-            { title: "Group", rowId: `${config.prefix}group` },
-          ]
-        }
-      ]
     };
 
     await sock.sendMessage(from, listMessage);
