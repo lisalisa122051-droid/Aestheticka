@@ -4,7 +4,7 @@ const config = require('../config.js');
 module.exports = async (sock, message) => {
   const { from, sender, command, args, reply } = message;
 
-  // Tambah command .fun untuk List Message
+  // Fun menu utama
   if (command === 'fun') {
     const listMessage = {
       text: "🎮 *FUN & GAMES*\n\nPilih permainan yang tersedia:",
@@ -14,10 +14,26 @@ module.exports = async (sock, message) => {
         {
           title: "GAMES",
           rows: [
-            { title: "Joke", description: "Dapatkan joke lucu", rowId: `${config.prefix}joke` },
-            { title: "Truth", description: "Truth or dare", rowId: `${config.prefix}truth` },
-            { title: "Dare", description: "Tantangan seru", rowId: `${config.prefix}dare` },
-            { title: "Rate", description: "Rating sesuatu", rowId: `${config.prefix}rate` },
+            { 
+              title: "😂 JOKE", 
+              description: "Dapatkan joke lucu", 
+              rowId: `${config.prefix}joke` 
+            },
+            { 
+              title: "🤔 TRUTH", 
+              description: "Truth or dare - pertanyaan jujur", 
+              rowId: `${config.prefix}truth` 
+            },
+            { 
+              title: "💪 DARE", 
+              description: "Truth or dare - tantangan", 
+              rowId: `${config.prefix}dare` 
+            },
+            { 
+              title: "⭐ RATE", 
+              description: "Rating sesuatu", 
+              rowId: `${config.prefix}rate` 
+            }
           ]
         }
       ]
@@ -30,10 +46,10 @@ module.exports = async (sock, message) => {
   // Joke
   if (command === 'joke') {
     try {
-      const { data } = await axios.get('https://v2.jokeapi.dev/joke/Any?type=single');
-      await reply(data.joke);
+      const { data } = await axios.get('https://v2.jokeapi.dev/joke/Any?type=single&lang=id');
+      await reply(`😂 *JOKE*\n\n${data.joke}`);
     } catch (error) {
-      await reply('Failed to fetch joke.');
+      await reply('Gagal mengambil joke. Coba lagi nanti.');
     }
     return true;
   }
@@ -43,38 +59,43 @@ module.exports = async (sock, message) => {
     const truths = [
       'Apa rahasia terbesar yang kamu sembunyikan dari keluarga?',
       'Pernahkah kamu menyontek saat ujian?',
-      'Siapa orang yang paling kamu sukai di sini?',
+      'Siapa orang yang paling kamu sukai di grup ini?',
       'Apa hal paling memalukan yang pernah kamu lakukan?',
+      'Apa kebohongan terbesar yang pernah kamu katakan?',
+      'Pernahkah kamu mencuri sesuatu?',
     ];
     const randomTruth = truths[Math.floor(Math.random() * truths.length)];
-    await reply(`*Truth:*\n${randomTruth}`);
+    await reply(`🤔 *TRUTH*\n\n${randomTruth}`);
     return true;
   }
 
   // Dare
   if (command === 'dare') {
     const dares = [
-      'Kirim pesan ke kontak terakhir di hp kamu "Aku mencintaimu".',
+      'Kirim pesan "Aku mencintaimu" ke kontak terakhir di hp kamu.',
       'Ubah status WA menjadi "Aku sedang sakit" selama 1 jam.',
       'Telepon orang random dan nyanyikan lagu selamat ulang tahun.',
       'Posting foto masa kecilmu di status WA.',
+      'Kirim voice note menyanyikan lagu nasional.',
+      'Ganti nama di WA menjadi "Bocah Kematian" selama 1 jam.',
     ];
     const randomDare = dares[Math.floor(Math.random() * dares.length)];
-    await reply(`*Dare:*\n${randomDare}`);
+    await reply(`💪 *DARE*\n\n${randomDare}`);
     return true;
   }
 
   // Rate
   if (command === 'rate') {
-    const target = args[0] || 'you';
+    const target = args.join(' ') || 'kamu';
     const rating = Math.floor(Math.random() * 101);
-    await reply(`I rate ${target} ${rating}/100.`);
-    return true;
-  }
-
-  // Tebak gambar (placeholder)
-  if (command === 'tebakgambar') {
-    await reply('Fitur tebak gambar dalam pengembangan.');
+    let emoji = '⭐';
+    
+    if (rating >= 90) emoji = '🔥';
+    else if (rating >= 70) emoji = '👍';
+    else if (rating >= 50) emoji = '😐';
+    else emoji = '👎';
+    
+    await reply(`⭐ *RATING*\n\nSaya memberikan ${target} rating:\n\n${emoji} *${rating}/100*`);
     return true;
   }
 
