@@ -1,7 +1,31 @@
 const axios = require('axios');
+const config = require('../config.js');
 
 module.exports = async (sock, message) => {
   const { from, sender, command, args, reply } = message;
+
+  // Tambah command .fun untuk List Message
+  if (command === 'fun') {
+    const listMessage = {
+      text: "🎮 *FUN & GAMES*\n\nPilih permainan yang tersedia:",
+      title: "FUN MENU",
+      buttonText: "Pilih Game",
+      sections: [
+        {
+          title: "GAMES",
+          rows: [
+            { title: "Joke", description: "Dapatkan joke lucu", rowId: `${config.prefix}joke` },
+            { title: "Truth", description: "Truth or dare", rowId: `${config.prefix}truth` },
+            { title: "Dare", description: "Tantangan seru", rowId: `${config.prefix}dare` },
+            { title: "Rate", description: "Rating sesuatu", rowId: `${config.prefix}rate` },
+          ]
+        }
+      ]
+    };
+
+    await sock.sendMessage(from, listMessage);
+    return true;
+  }
 
   // Joke
   if (command === 'joke') {
